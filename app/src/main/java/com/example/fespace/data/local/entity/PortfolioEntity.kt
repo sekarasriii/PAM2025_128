@@ -9,7 +9,8 @@ data class PortfolioEntity(
     val idPortfolios: Int = 0,
     val idAdmin: Int,
     val title: String,
-    val description: String?,
+    val description: String,
+    val imagePath: String?,
     val category: String, // 'residential', 'commercial', 'renovation', 'interior'
     val year: Int,
     val createAt: Long = System.currentTimeMillis(),

@@ -17,4 +17,12 @@ interface PortfolioDao {
 
     @Delete
     suspend fun deletePortfolio(portfolio: PortfolioEntity)
+
+    @Query("""
+        SELECT * FROM portfolios 
+        WHERE LOWER(category) = LOWER(:category)
+        ORDER BY createAt DESC
+    """)
+    fun getPortfoliosByCategory(category: String): Flow<List<PortfolioEntity>>
+
 }

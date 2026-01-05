@@ -11,7 +11,6 @@ import com.example.fespace.data.local.dao.PortfolioDao
 import com.example.fespace.data.local.dao.OrderDao
 import com.example.fespace.data.local.entity.ServiceEntity
 import com.example.fespace.data.local.entity.PortfolioEntity
-import com.example.fespace.data.local.entity.OrderEntity
 
 @Database(entities =
     [
@@ -19,9 +18,7 @@ import com.example.fespace.data.local.entity.OrderEntity
         PortfolioEntity::class,
         ServiceEntity::class,
         OrderEntity::class],
-        version = 2,
-        exportSchema = false
-)
+    version = 1, exportSchema = false)
 abstract class FeSpaceDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun portfolioDao(): PortfolioDao
@@ -39,7 +36,7 @@ abstract class FeSpaceDatabase : RoomDatabase() {
                     FeSpaceDatabase::class.java,
                     "fespace_database"
                 )
-                    .fallbackToDestructiveMigration() // <--- TAMBAHKAN INI
+                    .fallbackToDestructiveMigration() // <--- INI WAJIB ADA
                     .build()
                 INSTANCE = instance
                 instance

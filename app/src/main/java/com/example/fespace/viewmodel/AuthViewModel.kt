@@ -57,10 +57,11 @@ class AuthViewModel(private val repository: UserRepository) : ViewModel() {
     }
 
     fun login(email: String, pass: String, onResult: (String?) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) { // Gunakan Dispatchers.IO
-            val user = repository.getUser(email, pass)
-            withContext(Dispatchers.Main) { // Kembali ke Main Thread untuk update UI
+        viewModelScope.launch(Dispatchers.IO) {
+            val user = repository.getUser(email, pass) // This returns a UserEntity?
+            withContext(Dispatchers.Main) {
                 if (user != null) {
+                    // Pass the 'role' property (a String) instead of the whole 'user' object
                     onResult(user.role)
                 } else {
                     onResult(null)
@@ -68,11 +69,9 @@ class AuthViewModel(private val repository: UserRepository) : ViewModel() {
             }
         }
     }
-
     // Factory (Tetap di bawah)
-    class AuthViewModelFactory(
-        private val userRepo: UserRepository,
-        private val portfolioRepo: PortfolioRepository,
+    class ViewModelFactory(
+        private val userRepo: UserRepository,private val portfolioRepo: PortfolioRepository,
         private val serviceRepo: ServiceRepository,
         private val orderRepo: OrderRepository
     ) : ViewModelProvider.Factory {
@@ -83,10 +82,24 @@ class AuthViewModel(private val repository: UserRepository) : ViewModel() {
                     AuthViewModel(userRepo) as T
 
                 modelClass.isAssignableFrom(AdminViewModel::class.java) ->
-                    AdminViewModel(portfolioRepo, serviceRepo, orderRepo, userRepo) as T
+                    AdminViewModel(
+                        portfolioRepository = portfolioRepo,
+                        serviceRepository = serviceRepo,
+                        orderRepository = orderRepo,
+                        userRepository = userRepo
+                    ) as T
 
-                else -> throw IllegalArgumentException("Unknown ViewModel class")
+                modelClass.isAssignableFrom(ClientViewModel::class.java) ->
+                    ClientViewModel(
+                        orderRepository = orderRepo,
+                        userRepository = userRepo,      // Tambahkan ini jika dibutuhkan
+                        serviceRepository = serviceRepo,
+                        portfolioRepository = portfolioRepo
+                    ) as T
+
+                else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
             }
         }
+
     }
 }

@@ -2,6 +2,7 @@ package com.example.fespace.data.local.dao
 
 import androidx.room.*
 import com.example.fespace.data.local.entity.UserEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
@@ -13,7 +14,7 @@ interface UserDao {
     suspend fun insert(user: UserEntity)
 
     @Update
-    suspend fun update(user: UserEntity)
+    suspend fun updateUser(user: UserEntity)
 
     @Delete
     suspend fun delete(user: UserEntity)
@@ -23,4 +24,7 @@ interface UserDao {
 
     @Query("SELECT * FROM users WHERE idUser = :id LIMIT 1")
     suspend fun getUserById(id: Int): UserEntity?
+
+    @Query("SELECT COUNT(*) FROM users WHERE role = 'client'")
+    fun getClientCount(): Flow<Int>
 }

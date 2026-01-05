@@ -1,27 +1,36 @@
 package com.example.fespace.view.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.fespace.data.local.database.FeSpaceDatabase
-import com.example.fespace.repository.UserRepository
-import com.example.fespace.view.auth.LoginScreen
-import com.example.fespace.view.auth.RegisterScreen
-import com.example.fespace.view.client.ClientHomeScreen
-import com.example.fespace.view.client.OrderServiceScreen
-import com.example.fespace.view.client.OrderStatusScreen
-import com.example.fespace.view.common.WelcomeScreen
-import com.example.fespace.viewmodel.AuthViewModel
-import com.example.fespace.viewmodel.ViewModelFactory
 import com.example.fespace.repository.OrderRepository
 import com.example.fespace.repository.PortfolioRepository
 import com.example.fespace.repository.ServiceRepository
+import com.example.fespace.repository.UserRepository
 import com.example.fespace.view.admin.AdminDashboardScreen
-import com.example.fespace.view.admin.AdminRoute
+import com.example.fespace.view.auth.LoginScreen
+import com.example.fespace.view.auth.RegisterScreen
+import com.example.fespace.view.client.ClientHomeScreen
+import com.example.fespace.view.client.OrderDetailScreen
+import com.example.fespace.view.client.OrderServiceScreen
+import com.example.fespace.view.client.OrderStatusScreen
+import com.example.fespace.view.common.WelcomeScreen
 import com.example.fespace.viewmodel.AdminViewModel
+import com.example.fespace.viewmodel.AuthViewModel
+import com.example.fespace.viewmodel.ClientViewModel
+import com.example.fespace.viewmodel.ViewModelFactory
+import com.example.fespace.view.client.ClientProfileScreen
+import com.example.fespace.view.client.ClientRoute
 
 @Composable
 fun AppNavigation(startDestination: String) {
@@ -43,28 +52,25 @@ fun AppNavigation(startDestination: String) {
     val portfolioRepository = PortfolioRepository(portfolioDao)
     val serviceRepository = ServiceRepository(serviceDao)
 
-    // 4. Initialize ViewModel
-    val authViewModel: AuthViewModel = viewModel(
-        factory = ViewModelFactory(
-            userRepo = userRepository,
-            orderRepo = orderRepository,
-            portfolioRepo = portfolioRepository,
-            serviceRepo = serviceRepository
-        )
+    // 4. Initialize ViewModel Factory
+    val viewModelFactory = ViewModelFactory(
+        userRepo = userRepository,
+        portfolioRepo = portfolioRepository,
+        serviceRepo = serviceRepository,
+        orderRepo = orderRepository
     )
 
-    //update versi 2
-    val adminViewModel: AdminViewModel = viewModel(
-        factory = ViewModelFactory(
-            userRepo = userRepository,
-            orderRepo = orderRepository,
-            portfolioRepo = portfolioRepository,
-            serviceRepo = serviceRepository
-        )
-    )
+    // 5. Initialize ViewModels
+    val authViewModel: AuthViewModel = viewModel(factory = viewModelFactory)
+    val adminViewModel: AdminViewModel = viewModel(factory = viewModelFactory)
+    val clientViewModel: ClientViewModel = viewModel(factory = viewModelFactory)
 
-    NavHost(navController = navController, startDestination = startDestination) {
+    var currentUserId by remember { mutableIntStateOf(-1) }
 
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
         // WELCOME SCREEN
         composable(Screen.Welcome.route) {
             WelcomeScreen(
@@ -74,22 +80,23 @@ fun AppNavigation(startDestination: String) {
         }
 
         // LOGIN SCREEN
+        // LOGIN SCREEN
         composable(Screen.Login.route) {
             LoginScreen(
+                // TAMBAHKAN DUA PARAMETER INI:
                 navController = navController,
                 viewModel = authViewModel,
-                onLoginSuccess = { role ->
-                    // Gunakan Log untuk melihat apakah role benar-benar masuk
-                    android.util.Log.d("NAV_DEBUG", "User Role: $role")
 
-                    // Pastikan route ini TERDAFTAR di bawah (di NavHost ini)
+                onLoginSuccess = { role, userId ->
+                    // SIMPAN ID USER YANG BERHASIL LOGIN DISINI
+                    currentUserId = userId
+
                     if (role.equals("admin", ignoreCase = true)) {
                         navController.navigate("admin_route") {
-                            // Menghapus layar login dari stack agar tidak bisa "back" ke login
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     } else {
-                        navController.navigate("client_route") {
+                        navController.navigate("client_home") {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     }
@@ -99,7 +106,7 @@ fun AppNavigation(startDestination: String) {
             )
         }
 
-        // REGISTER
+        // REGISTER SCREEN
         composable(Screen.Register.route) {
             RegisterScreen(
                 navController = navController,
@@ -108,25 +115,106 @@ fun AppNavigation(startDestination: String) {
             )
         }
 
-        // CLIENT DASHBOARD (Rute ini harus sama dengan yang di-navigate di atas)
         composable("client_route") {
-            ClientHomeScreen(onOrderClick = { /* navigasi order */ })
-        }
-
-        // ADMIN DASHBOARD (Rute ini harus sama dengan yang di-navigate di atas)
-        composable("admin_route") {
-            AdminDashboardScreen(adminViewModel = adminViewModel)
-        }
-
-        composable("order_service") {
-            OrderServiceScreen(
-                onOrderSuccess = { navController.navigate("order_status") }
+            ClientRoute(
+                navController = navController,
+                clientId = currentUserId, // Pastikan ID ini dikirim dari session/state login
+                clientViewModel = clientViewModel
             )
         }
 
+        // --- SECTION CLIENT ---
+
+        // CLIENT HOME
+        composable("client_home") {
+            ClientHomeScreen(
+                clientViewModel = clientViewModel,
+                onOrderClick = { serviceId ->
+                    navController.navigate("order_service/$serviceId")
+                },
+                onViewOrdersClick = {
+                    navController.navigate("order_status")
+                },
+                onProfileClick = {
+                    navController.navigate("client_profile")
+                }
+            )
+        }
+
+        // CLIENT PROFILE
+        composable("client_profile") {
+            ClientProfileScreen(
+                clientId = currentUserId, // SEKARANG MENGIRIM ID YANG DINAMIS
+                clientViewModel = clientViewModel,
+                onLogout = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "order_service/{serviceId}",
+            arguments = listOf(navArgument("serviceId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val serviceId = backStackEntry.arguments?.getInt("serviceId") ?: 0
+            OrderServiceScreen(
+                clientViewModel = clientViewModel,
+                clientId = currentUserId,
+                serviceId = serviceId,
+                onOrderSuccess = {
+                    // PERBAIKAN NAVIGASI:
+                    navController.navigate("order_status") {
+                        // Hapus form order dari tumpukan (backstack)
+                        // agar saat di-back dari halaman 'Pesanan Saya' langsung ke Home.
+                        popUpTo("client_home") {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
 
         composable("order_status") {
-            OrderStatusScreen()
+            OrderStatusScreen(
+                clientViewModel = clientViewModel,
+                clientId = currentUserId,
+                onDetailClick = { orderId ->
+                    navController.navigate("order_detail/$orderId")
+                },
+                onBackClick = { navController.popBackStack() } // Pastikan ini ada
+            )
+        }
+
+        composable(
+            route = "order_detail/{orderId}",
+            arguments = listOf(navArgument("orderId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getInt("orderId") ?: 0
+            OrderDetailScreen(
+                orderId = orderId,
+                clientViewModel = clientViewModel
+            )
+        }
+
+        // --- SECTION ADMIN ---
+
+        composable("admin_route") {
+            AdminDashboardScreen(
+                adminViewModel = adminViewModel,
+                navController = navController
+            )
+        }
+
+        composable(Screen.AdminDashboard.route) {
+            AdminDashboardScreen(
+                adminViewModel = adminViewModel,
+                navController = navController
+            )
         }
     }
 }

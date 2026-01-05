@@ -1,5 +1,7 @@
 package com.example.fespace.viewmodel
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fespace.data.local.entity.PortfolioEntity
@@ -13,6 +15,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.text.contains
+import kotlinx.coroutines.flow.combine
 
 class AdminViewModel(
     private val portfolioRepository: PortfolioRepository,
@@ -45,23 +49,47 @@ class AdminViewModel(
             initialValue = emptyList()
         )
 
+    // Masukkan di dalam class AdminViewModel
+    val clientCount: StateFlow<Int> = userRepository.getClientCount()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Lazily,
+            initialValue = 0
+        )
+
+    // State untuk Filter
+    var filterStatus = mutableStateOf<String?>(null)
+    var filterClientName = mutableStateOf<String?>(null)
+
+    // Mengambil data orders berdasarkan filter
+    val filteredOrders: StateFlow<List<OrderEntity>> = combine(
+        orderRepository.getAllOrders(),
+        snapshotFlow { filterStatus.value },
+        snapshotFlow { filterClientName.value }
+    ) { allOrders, status, name ->
+        allOrders.filter { order ->
+            (status == null || order.status == status) &&
+                    (name == null || order.locationAddress.contains(name, ignoreCase = true))
+        }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     // --- CRUD SERVICES ---
 
-    fun addService(name: String, desc: String, price: Double, duration: String, features: String, adminId: Int) {
+    fun addService(name: String, category: String, desc: String, price: Double, duration: String, features: String, adminId: Int) {
         viewModelScope.launch {
             serviceRepository.addService(
-                ServiceEntity(
-                    idAdmin = adminId,
-                    nameServices = name,
+                ServiceEntity(nameServices = name,
+                    category = category.lowercase().trim(), // Simpan sebagai huruf kecil & rapi
                     description = desc,
                     priceStart = price,
                     durationEstimate = duration,
-                    features = features
+                    features = features,
+                    idAdmin = adminId
                 )
             )
         }
     }
+
 
     fun updateService(service: ServiceEntity) {
         viewModelScope.launch {
@@ -78,7 +106,7 @@ class AdminViewModel(
 
     // --- CRUD PORTFOLIO ---
 
-    fun addPortfolio(title: String, desc: String, category: String, year: Int, adminId: Int) {
+    fun addPortfolio(title: String, desc: String, category: String, year: Int, imagePath: String?, adminId: Int) {
         viewModelScope.launch {
             portfolioRepository.insert(
                 PortfolioEntity(
@@ -86,11 +114,13 @@ class AdminViewModel(
                     title = title,
                     description = desc,
                     category = category,
-                    year = year
+                    year = year,
+                    imagePath = imagePath // TAMBAHKAN INI
                 )
             )
         }
     }
+
 
     fun updatePortfolio(portfolio: PortfolioEntity) {
         viewModelScope.launch {
@@ -112,7 +142,7 @@ class AdminViewModel(
             // Kita copy order lama dan ganti statusnya saja
             val updatedOrder = order.copy(
                 status = newStatus,
-                updateAt = System.currentTimeMillis()
+                updateAt = System.currentTimeMillis() // Pastikan nama variabel sesuai Entity
             )
             orderRepository.update(updatedOrder)
         }

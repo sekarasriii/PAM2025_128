@@ -2,7 +2,7 @@ package com.example.fespace.repository
 
 import com.example.fespace.data.local.dao.OrderDao
 import kotlinx.coroutines.flow.Flow
-import com.example.fespace.data.local.entity.OrderEntity
+import OrderEntity
 
 class OrderRepository(
     private val orderDao: OrderDao
@@ -12,9 +12,9 @@ class OrderRepository(
         return orderDao.getOrdersByClient(clientId)
     }
 
-    fun getOrdersByAdmin(adminId: Int): Flow<List<OrderEntity>> {
-        return orderDao.getOrdersByAdmin(adminId)
-    }
+    //fun getOrdersByAdmin(adminId: Int): Flow<List<OrderEntity>> {
+        //return orderDao.getOrdersByAdmin(adminId)
+    //}
 
     fun getAllOrders(): Flow<List<OrderEntity>> {
         return orderDao.getAllOrders()
@@ -24,7 +24,7 @@ class OrderRepository(
         return orderDao.getOrdersByStatus(status)
     }
 
-    suspend fun getOrderById(id: Int): OrderEntity? {
+    suspend fun getOrderById(id: Int): OrderEntity? { // Lengkapi menjadi getOrderById
         return orderDao.getOrderById(id)
     }
 

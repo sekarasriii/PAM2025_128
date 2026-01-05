@@ -1,19 +1,29 @@
 package com.example.fespace.data.local.entity
 
-import androidx.room.PrimaryKey
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
+import com.example.fespace.data.local.entity.UserEntity
+import com.example.fespace.data.local.entity.ServiceEntity
 
-@Entity(tableName = "orders")
+@Entity(
+    tableName = "orders",
+    foreignKeys = [
+        ForeignKey(entity = UserEntity::class, parentColumns = ["idUser"], childColumns = ["idClient"]),
+        ForeignKey(entity = ServiceEntity::class, parentColumns = ["idServices"], childColumns = ["idServices"])
+    ]
+)
 data class OrderEntity(
     @PrimaryKey(autoGenerate = true)
-    val idOrder: Int = 0,
+    val idOrders: Int = 0,
     val idClient: Int,
-    val idAdmin: Int,
-    val idService: Int,
+    val idServices: Int,
     val locationAddress: String,
     val budget: Double,
-    // pending, approved, survey, design, revision, final, completed
-    val status: String,
-    val createAt: Long,
-    val updateAt: Long
+    val status: String = "pending",
+    // Gunakan ColumnInfo agar konsisten dengan query DAO
+    @androidx.room.ColumnInfo(name = "createAt")
+    val createAt: Long = System.currentTimeMillis(),
+    @androidx.room.ColumnInfo(name = "updateAt")
+    val updateAt: Long = System.currentTimeMillis()
 )

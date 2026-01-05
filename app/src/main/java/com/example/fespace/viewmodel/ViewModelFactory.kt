@@ -13,13 +13,32 @@ class ViewModelFactory(
     private val serviceRepo: ServiceRepository,
     private val orderRepo: OrderRepository
 ) : ViewModelProvider.Factory {
+
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        @Suppress("UNCHECKED_CAST")
+        @Suppress("UNCHECKED_CAST") // Menghilangkan warning unchecked cast
         return when {
-            modelClass.isAssignableFrom(AuthViewModel::class.java) ->
+            // 1. Kasus untuk AuthViewModel
+            modelClass.isAssignableFrom(AuthViewModel::class.java) -> {
                 AuthViewModel(userRepo) as T
-            modelClass.isAssignableFrom(AdminViewModel::class.java) ->
-                AdminViewModel(portfolioRepo, serviceRepo, orderRepo, userRepo) as T
+            }
+            // 2. Kasus untuk AdminViewModel
+            modelClass.isAssignableFrom(AdminViewModel::class.java) -> {
+                AdminViewModel(
+                    portfolioRepository = portfolioRepo,
+                    serviceRepository = serviceRepo,
+                    orderRepository = orderRepo,
+                    userRepository = userRepo
+                ) as T
+            }
+            // 3. PERBAIKAN: Sesuaikan dengan parameter ClientViewModel
+            modelClass.isAssignableFrom(ClientViewModel::class.java) -> {
+                ClientViewModel(
+                    orderRepository = orderRepo,
+                    userRepository = userRepo,      // Tambahkan ini agar tidak type mismatch
+                    serviceRepository = serviceRepo,
+                    portfolioRepository = portfolioRepo
+                ) as T
+            }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
     }

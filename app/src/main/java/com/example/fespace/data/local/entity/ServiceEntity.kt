@@ -8,12 +8,11 @@ data class ServiceEntity(
     @PrimaryKey(autoGenerate = true) val idServices: Int = 0,
     val idAdmin: Int,
     val nameServices: String,
+    val category: String,
     val description: String,
     val priceStart: Double,
     val durationEstimate: String,
     val features: String?,
     val createAt: Long = System.currentTimeMillis(),
-    val updateAt: Long = System.currentTimeMillis()
+    val updateAt: Long = System.currentTimeMillis() // Sesuaikan dengan 'updateAt' Anda
 )
-
-

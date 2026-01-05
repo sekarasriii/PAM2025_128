@@ -6,8 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.example.fespace.data.local.entity.OrderEntity
 import kotlinx.coroutines.flow.Flow
+import OrderEntity
 
 @Dao
 interface OrderDao {
@@ -33,11 +33,11 @@ interface OrderDao {
     // ========================
     // READ (FLOW → UI)
     // ========================
-    @Query("SELECT * FROM orders WHERE idClient = :clientId")
+    @Query("SELECT * FROM orders WHERE idClient = :clientId ORDER BY idOrders DESC")
     fun getOrdersByClient(clientId: Int): Flow<List<OrderEntity>>
 
-    @Query("SELECT * FROM orders WHERE idAdmin = :adminId")
-    fun getOrdersByAdmin(adminId: Int): Flow<List<OrderEntity>>
+    //@Query("SELECT * FROM orders WHERE idAdmin = :adminId")
+    //fun getOrdersByAdmin(adminId: Int): Flow<List<OrderEntity>>
 
     @Query("SELECT * FROM orders ORDER BY createAt DESC")
     fun getAllOrders(): Flow<List<OrderEntity>>
@@ -45,9 +45,18 @@ interface OrderDao {
     // ========================
     // READ (ONE DATA)
     // ========================
-    @Query("SELECT * FROM orders WHERE idOrder = :id")
+    @Query("SELECT * FROM orders WHERE idOrders = :id")
     suspend fun getOrderById(id: Int): OrderEntity?
 
     @Query("SELECT * FROM orders WHERE status = :status")
     fun getOrdersByStatus(status: String): Flow<List<OrderEntity>>
+
+    @Query("""
+    SELECT orders.* FROM orders 
+    INNER JOIN users ON orders.idClient = users.idUser 
+    WHERE (:status IS NULL OR orders.status = :status)    AND (:clientName IS NULL OR users.nameUser LIKE '%' || :clientName || '%')
+    ORDER BY orders.createAt DESC
+""")
+    fun getFilteredOrders(status: String?, clientName: String?): Flow<List<OrderEntity>>
+
 }

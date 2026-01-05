@@ -26,12 +26,13 @@ fun AuthRoute(navController: NavHostController) {
             LoginScreen(
                 navController = navController, // <--- ADD THIS LINE
                 viewModel = authViewModel,
-                onLoginSuccess = { role ->
+                onLoginSuccess = { role, userId -> // Added userId parameter here
                     if (role == "ADMIN") {
                         navController.navigate("admin_route") {
                             popUpTo("login") { inclusive = true }
                         }
                     } else {
+                        // You might want to pass the userId to the client route if needed
                         navController.navigate("client_route") {
                             popUpTo("login") { inclusive = true }
                         }

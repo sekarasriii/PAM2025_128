@@ -2,6 +2,7 @@ package com.example.fespace.repository
 
 import com.example.fespace.data.local.dao.UserDao
 import com.example.fespace.data.local.entity.UserEntity
+import kotlinx.coroutines.flow.Flow
 
 class UserRepository(private val userDao: UserDao) {
 
@@ -17,15 +18,17 @@ class UserRepository(private val userDao: UserDao) {
         return userDao.login(email, password)
     }
 
-    suspend fun getUserById(id: Int): UserEntity? {
-        return userDao.getUserById(id)
+    suspend fun getUserById(userId: Int): UserEntity? {
+        return userDao.getUserById(userId)
     }
 
-    suspend fun updateUser(user: UserEntity) {
-        userDao.update(user)
+    suspend fun update(user: UserEntity) {
+        userDao.updateUser(user) // Pastikan nama di Dao sesuai
     }
 
     suspend fun deleteUser(user: UserEntity) {
         userDao.delete(user)
     }
+
+    fun getClientCount(): Flow<Int> = userDao.getClientCount()
 }
