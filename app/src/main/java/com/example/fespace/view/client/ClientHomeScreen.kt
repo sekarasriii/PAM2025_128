@@ -25,6 +25,11 @@ import com.example.fespace.data.local.entity.ServiceEntity
 import com.example.fespace.viewmodel.ClientViewModel
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.ui.text.style.TextOverflow
+import com.example.fespace.ui.components.CategoryChip
+import com.example.fespace.ui.components.PrimaryButton
+import com.example.fespace.ui.theme.*
+import com.example.fespace.ui.components.LocalImage
+import androidx.compose.ui.layout.ContentScale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,20 +37,14 @@ fun ClientHomeScreen(
     clientViewModel: ClientViewModel,
     onOrderClick: (Int) -> Unit,
     onViewOrdersClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onSeeAllPortfolioClick: () -> Unit
 ) {
-    // 1. Ambil data asli dari database (Flow)
+    // Data from database
     val services: List<ServiceEntity> by clientViewModel.availableServices.collectAsStateWithLifecycle(initialValue = emptyList())
-    LaunchedEffect(services) {
-        println("DEBUG_LOG: Total Layanan di DB = ${services.size}")
-        services.forEach {
-            println("DEBUG_LOG: Nama: ${it.nameServices}, Kategori: '${it.category}'")
-        }
-    }
-
     val portfolios: List<PortfolioEntity> by clientViewModel.allPortfolios.collectAsStateWithLifecycle(initialValue = emptyList())
 
-    // State UI
+    // UI State
     var selectedCategory by remember { mutableStateOf("Residential") }
     var selectedServiceForDetail by remember { mutableStateOf<ServiceEntity?>(null) }
     var showSheet by remember { mutableStateOf(false) }
@@ -55,10 +54,20 @@ fun ClientHomeScreen(
     Scaffold(
         topBar = {
             LargeTopAppBar(
-                title = { Text("FeSpace Katalog", fontWeight = FontWeight.Bold) },
+                title = { 
+                    Text(
+                        "FeSpace",
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    ) 
+                },
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = DarkCharcoal,
+                    titleContentColor = TextPrimary,
+                    actionIconContentColor = Terracotta
+                ),
                 actions = {
                     IconButton(onClick = onViewOrdersClick) {
-                        // MENGGUNAKAN VERSI AUTOMIRRORED
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Assignment,
                             contentDescription = "Pesanan Saya"
@@ -67,72 +76,142 @@ fun ClientHomeScreen(
                     IconButton(onClick = onProfileClick) {
                         Icon(
                             imageVector = Icons.Default.AccountCircle,
-                            contentDescription = null,
+                            contentDescription = "Profile",
                             modifier = Modifier.size(32.dp)
                         )
                     }
                 }
             )
-        }
+        },
+        containerColor = DarkCharcoal
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            contentPadding = PaddingValues(Spacing.Medium),
+            verticalArrangement = Arrangement.spacedBy(Spacing.Large)
         ) {
-            // --- SECTION 1: PILIH KATEGORI ---
+            // Welcome Section
             item {
-                Text("Pilih Kategori Desain", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(Spacing.Small)
+                ) {
+                    Text(
+                        "Wujudkan Hunian Impian",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Terracotta
+                    )
+                    Text(
+                        "Pilih kategori dan temukan inspirasi proyek Anda",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary
+                    )
+                }
             }
 
-            items(categories) { category ->
-                val isSelected = selectedCategory == category
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .clickable { selectedCategory = category },
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(if (isSelected) 8.dp else 2.dp)
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.horizontalGradient(
-                                    if (isSelected)
-                                        listOf(Color(0xFF1A237E), Color(0xFF3949AB))
-                                    else
-                                        listOf(Color(0xFFE0E0E0), Color(0xFFBDBDBD))
+            // Category Selection - Horizontal Chips
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.Small)) {
+                    Text(
+                        "Kategori Desain",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimary
+                    )
+                    
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.Small)
+                    ) {
+                        items(categories) { category ->
+                            val isSelected = selectedCategory == category
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { selectedCategory = category },
+                                label = { Text(category) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    containerColor = DarkSurface,
+                                    selectedContainerColor = Terracotta,
+                                    labelColor = TextSecondary,
+                                    selectedLabelColor = DarkCharcoal
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = isSelected,
+                                    borderColor = Gray700,
+                                    selectedBorderColor = Terracotta,
+                                    borderWidth = 1.5.dp
                                 )
                             )
-                    ) {
-                        Text(
-                            text = category,
-                            color = if (isSelected) Color.White else Color.Black,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
+                        }
                     }
                 }
             }
 
-            // --- SECTION 2: PORTFOLIO (INSPIRASI PROYEK) ---
+            // Portfolio Section
             item {
-                Text("Inspirasi Proyek $selectedCategory", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Inspirasi Proyek",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimary
+                    )
+                    TextButton(onClick = onSeeAllPortfolioClick) {
+                        Text("Lihat Semua", color = Terracotta)
+                    }
+                }
             }
 
-            // Filter Portfolio (Sesuai seleksi Anda)
-            val filteredPortfolios = portfolios.filter { it.category.trim().equals(selectedCategory.trim(), ignoreCase = true) }
+            // Portfolio Cards
+            val filteredPortfolios = portfolios.filter { 
+                it.category.trim().equals(selectedCategory.trim(), ignoreCase = true) 
+            }
 
             if (filteredPortfolios.isEmpty()) {
-                item { Text("Belum ada inspirasi proyek untuk kategori ini.", color = Color.Gray, style = MaterialTheme.typography.bodySmall) }
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = DarkSurface
+                        ),
+                        shape = RoundedCornerShape(Radius.Medium)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(Spacing.ExtraLarge),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(Spacing.Small)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PhotoLibrary,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = TextTertiary
+                                )
+                                Text(
+                                    "Belum ada inspirasi proyek",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+                    }
+                }
             } else {
                 item {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.Medium)
+                    ) {
                         items(filteredPortfolios) { portfolio ->
                             PortfolioHomeCard(portfolio)
                         }
@@ -140,35 +219,79 @@ fun ClientHomeScreen(
                 }
             }
 
-            // --- SECTION 3: LAYANAN TERSEDIA ---
+            // Services Section
             item {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Text("Layanan Pesan Jasa $selectedCategory", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = Spacing.Small),
+                    color = Gray700
+                )
+                Text(
+                    "Layanan Tersedia",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary
+                )
             }
 
-            // Filter Services (PASTIKAN BAGIAN INI SAMA DENGAN PORTFOLIO)
+            // Service Cards
             val filteredServices = services.filter {
                 it.category.trim().equals(selectedCategory.trim(), ignoreCase = true)
             }
 
             if (filteredServices.isEmpty()) {
-                item { Text("Layanan belum tersedia untuk kategori ini.", color = Color.Gray, style = MaterialTheme.typography.bodySmall) }
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = DarkSurface
+                        ),
+                        shape = RoundedCornerShape(Radius.Medium)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(Spacing.ExtraLarge),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(Spacing.Small)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.WorkOff,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(48.dp),
+                                    tint = TextTertiary
+                                )
+                                Text(
+                                    "Layanan belum tersedia",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+                    }
+                }
             } else {
                 items(filteredServices) { service ->
-                    ServiceKatalogItem(service, onClick = {
-                        selectedServiceForDetail = service
-                        showSheet = true
-                    })
+                    ServiceKatalogItem(
+                        service = service,
+                        onClick = {
+                            selectedServiceForDetail = service
+                            showSheet = true
+                        }
+                    )
                 }
             }
 
-            item { Spacer(modifier = Modifier.height(50.dp)) }
+            item { Spacer(modifier = Modifier.height(Spacing.ExtraLarge)) }
         }
 
-        // --- BOTTOM SHEET DETAIL JASA ---
+        // Bottom Sheet for Service Detail
         if (showSheet && selectedServiceForDetail != null) {
             ModalBottomSheet(
-                onDismissRequest = { showSheet = false }
+                onDismissRequest = { showSheet = false },
+                containerColor = DarkSurface
             ) {
                 ServiceDetailContent(
                     service = selectedServiceForDetail!!,
@@ -186,39 +309,158 @@ fun ClientHomeScreen(
 fun ServiceDetailContent(service: ServiceEntity, onConfirmPesan: () -> Unit) {
     Column(
         modifier = Modifier
-            .padding(24.dp)
+            .padding(Spacing.Large)
             .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
     ) {
-        Text(service.nameServices, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text(service.description)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Estimasi: ${service.durationEstimate}")
-            Text("Rp ${service.priceStart}", fontWeight = FontWeight.Bold, color = Color.Blue)
+        // Service Name
+        Text(
+            service.nameServices,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
+        
+        // Category Chip
+        CategoryChip(
+            text = service.category,
+            backgroundColor = TerracottaAlpha,
+            textColor = Terracotta
+        )
+        
+        // Description
+        Text(
+            service.description,
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextSecondary
+        )
+        
+        // Info Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = DarkCharcoal
+            ),
+            shape = RoundedCornerShape(Radius.Medium)
+        ) {
+            Column(
+                modifier = Modifier.padding(Spacing.Medium),
+                verticalArrangement = Arrangement.spacedBy(Spacing.Small)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            "Estimasi Waktu",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextTertiary
+                        )
+                        Text(
+                            service.durationEstimate,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimary
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            "Mulai Dari",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextTertiary
+                        )
+                        Text(
+                            com.example.fespace.utils.RupiahFormatter.formatToRupiah(service.priceStart),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = AccentGold
+                        )
+                    }
+                }
+            }
         }
-        Button(onClick = onConfirmPesan, modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)) {
-            Text("Pesan Jasa Sekarang")
-        }
-        Spacer(modifier = Modifier.height(20.dp))
+        
+        // Order Button
+        PrimaryButton(
+            text = "Pesan Jasa Sekarang",
+            onClick = onConfirmPesan
+        )
+        
+        Spacer(modifier = Modifier.height(Spacing.Medium))
     }
 }
 
 @Composable
 fun ServiceKatalogItem(service: ServiceEntity, onClick: () -> Unit) {
-    OutlinedCard(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(Radius.Medium),
+        colors = CardDefaults.cardColors(
+            containerColor = DarkSurface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        )
     ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(service.nameServices, fontWeight = FontWeight.Bold)
-                Text("Estimasi: ${service.durationEstimate}", style = MaterialTheme.typography.bodySmall)
+        Row(
+            modifier = Modifier.padding(Spacing.Medium),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Service Icon
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(Radius.Small),
+                color = DarkCharcoal
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Architecture,
+                        contentDescription = null,
+                        tint = BrownWarm
+                    )
+                }
             }
-            Text("Rp ${service.priceStart}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            
+            Spacer(modifier = Modifier.width(Spacing.Medium))
+            
+            // Service Info
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(Spacing.ExtraSmall)
+            ) {
+                Text(
+                    service.nameServices,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Text(
+                    "Estimasi: ${service.durationEstimate}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+            
+            // Price
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    "Mulai dari",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextTertiary
+                )
+                Text(
+                    com.example.fespace.utils.RupiahFormatter.formatToRupiah(service.priceStart),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = AccentGold
+                )
+            }
         }
     }
 }
@@ -227,36 +469,103 @@ fun ServiceKatalogItem(service: ServiceEntity, onClick: () -> Unit) {
 fun PortfolioHomeCard(portfolio: PortfolioEntity) {
     Card(
         modifier = Modifier
-            .width(240.dp) // Diperlebar agar deskripsi terbaca
-            .height(160.dp),
-        shape = RoundedCornerShape(12.dp)
+            .width(280.dp)
+            .height(180.dp),
+        shape = RoundedCornerShape(Radius.Medium),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = Elevation.Card
+        )
     ) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(Color.DarkGray)) {
-            // Overlay gelap agar teks putih terbaca
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(0.8f)))))
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Background Image or Gradient
+            if (portfolio.imagePath != null) {
+                LocalImage(
+                    imagePath = portfolio.imagePath,
+                    contentDescription = portfolio.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    showPlaceholder = false
+                )
+            } else {
+                // Fallback gradient if no image
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    BrownDark,
+                                    BrownWarm
+                                )
+                            )
+                        )
+                )
+            }
+            
+            // Dark overlay for text readability
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.Transparent,
+                                Color.Black.copy(0.7f)
+                            )
+                        )
+                    )
+            )
 
-            Column(Modifier
-                .align(Alignment.BottomStart)
-                .padding(12.dp)) {
-                Text(portfolio.title, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1)
+            Column(
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(Spacing.Medium)
+            ) {
+                // Category Chip
+                Surface(
+                    shape = RoundedCornerShape(Radius.Small),
+                    color = AccentGold.copy(alpha = 0.9f)
+                ) {
+                    Text(
+                        text = portfolio.category,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkCharcoal,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(Spacing.Small))
+                
+                // Title
+                Text(
+                    portfolio.title,
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
-                // Menampilkan Deskripsi Baru
+                // Description
                 Text(
                     text = portfolio.description ?: "",
-                    color = Color.White.copy(0.8f),
+                    color = TextSecondary,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
 
+                // Year
                 Text(
-                    text = "${portfolio.category} • ${portfolio.year}",
-                    color = Color.Cyan,
-                    style = MaterialTheme.typography.labelSmall
+                    text = "Tahun ${portfolio.year}",
+                    color = TextTertiary,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
