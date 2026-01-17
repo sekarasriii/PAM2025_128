@@ -15,4 +15,13 @@ sealed class Screen(val route: String) {
     object ManagePortfolio : Screen("manage_portfolio")
     object ManageService : Screen("manage_service")
     object ManageOrder : Screen("manage_order")
+
+    object AdminClients : Screen("admin_clients")
+
+    // ✅ TAMBAHKAN INI:
+    data class AdminOrderDetail(val orderId: Int) : Screen("admin_order_detail/$orderId") {
+        companion object {
+            const val routeWithArgs = "admin_order_detail/{orderId}"
+        }
+    }
 }

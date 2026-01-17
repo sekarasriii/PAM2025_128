@@ -26,13 +26,15 @@ fun AuthRoute(navController: NavHostController) {
     val orderRepository = OrderRepository(database.orderDao())
     val portfolioRepository = PortfolioRepository(database.portfolioDao())
     val serviceRepository = ServiceRepository(database.serviceDao())
+    val orderDocumentRepository = com.example.fespace.repository.OrderDocumentRepository(database.orderDocumentDao())
 
     // 2️⃣ Gunakan ViewModelFactory agar Repository Terinjeksi
     val factory = ViewModelFactory(
         userRepo = userRepository,
         orderRepo = orderRepository,
         portfolioRepo = portfolioRepository,
-        serviceRepo = serviceRepository
+        serviceRepo = serviceRepository,
+        orderDocumentRepo = orderDocumentRepository
     )
 
     val authViewModel: AuthViewModel = viewModel(factory = factory)
