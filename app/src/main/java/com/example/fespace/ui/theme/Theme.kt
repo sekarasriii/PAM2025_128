@@ -10,74 +10,94 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import androidx.compose.ui.graphics.Color
 
-private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryBlueLight,
-    onPrimary = Color.White,
-    primaryContainer = PrimaryBlueDark,
-    onPrimaryContainer = PrimaryBlueLight,
+
+// Elegant Homey Dark Color Scheme (Primary Theme)
+private val ElegantHomeyDarkScheme = darkColorScheme(
+    primary = Terracotta,
+    onPrimary = Cream,
+    primaryContainer = TerracottaDark,
+    onPrimaryContainer = WarmWhite,
     
-    secondary = SecondaryPurpleLight,
-    onSecondary = Color.White,
-    secondaryContainer = SecondaryPurple,
-    onSecondaryContainer = SecondaryPurpleLight,
+    secondary = SageGreen,
+    onSecondary = DarkCharcoal,
+    secondaryContainer = SageGreenDark,
+    onSecondaryContainer = Cream,
     
-    tertiary = AccentOrange,
-    onTertiary = Color.White,
+    tertiary = Gold,
+    onTertiary = DarkCharcoal,
+    tertiaryContainer = Copper,
+    onTertiaryContainer = Cream,
     
-    background = DarkBackground,
-    onBackground = NeutralGray100,
+    background = DarkCharcoal,
+    onBackground = Cream,
     
-    surface = DarkSurface,
-    onSurface = NeutralGray100,
-    surfaceVariant = DarkSurfaceVariant,
-    onSurfaceVariant = NeutralGray300,
+    surface = DarkGray,
+    onSurface = Cream,
+    surfaceVariant = DarkGrayLight,
+    onSurfaceVariant = Beige,
+    surfaceTint = Terracotta,
+    
+    surfaceDim = DarkGrayDark,
+    surfaceBright = DarkGrayLight,
+    surfaceContainer = SurfaceContainer,
+    surfaceContainerHigh = SurfaceContainerHigh,
+    surfaceContainerHighest = DarkGrayLight,
+    surfaceContainerLow = DarkGray,
+    surfaceContainerLowest = DarkCharcoal,
     
     error = AccentRed,
-    onError = Color.White,
+    onError = Cream,
+    errorContainer = Color(0xFF4A2020),
+    onErrorContainer = Color(0xFFFFDAD6),
     
-    outline = NeutralGray600,
-    outlineVariant = NeutralGray700
+    outline = Gray600,
+    outlineVariant = Gray700,
+    
+    scrim = Color(0x99000000),
+    inverseSurface = Cream,
+    inverseOnSurface = DarkCharcoal,
+    inversePrimary = TerracottaDark
 )
 
+// Light Color Scheme (Fallback - rarely used)
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryBlue,
-    onPrimary = Color.White,
-    primaryContainer = PrimaryBlueLight,
-    onPrimaryContainer = PrimaryBlueDark,
+    primary = Terracotta,
+    onPrimary = White,
+    primaryContainer = TerracottaLight,
+    onPrimaryContainer = DarkCharcoal,
     
-    secondary = SecondaryPurple,
-    onSecondary = Color.White,
-    secondaryContainer = SecondaryPurpleLight,
-    onSecondaryContainer = SecondaryPurple,
+    secondary = SageGreen,
+    onSecondary = White,
+    secondaryContainer = SageGreenLight,
+    onSecondaryContainer = DarkCharcoal,
     
-    tertiary = AccentOrange,
-    onTertiary = Color.White,
+    tertiary = Gold,
+    onTertiary = DarkCharcoal,
     
-    background = NeutralGray50,
-    onBackground = NeutralGray900,
+    background = WarmWhite,
+    onBackground = DarkCharcoal,
     
-    surface = Color.White,
-    onSurface = NeutralGray900,
-    surfaceVariant = NeutralGray100,
-    onSurfaceVariant = NeutralGray700,
+    surface = Cream,
+    onSurface = DarkCharcoal,
+    surfaceVariant = Gray100,
+    onSurfaceVariant = Gray700,
     
     error = AccentRed,
-    onError = Color.White,
+    onError = White,
     
-    outline = NeutralGray300,
-    outlineVariant = NeutralGray200
+    outline = Gray400,
+    outlineVariant = Gray300
 )
 
 @Composable
 fun FeSpaceTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
+    darkTheme: Boolean = true, // Default to dark theme for Elegant Homey
     dynamicColor: Boolean = false, // Disabled for consistent branding
     content: @Composable () -> Unit
 ) {
@@ -86,7 +106,7 @@ fun FeSpaceTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-        darkTheme -> DarkColorScheme
+        darkTheme -> ElegantHomeyDarkScheme
         else -> LightColorScheme
     }
     
@@ -94,8 +114,10 @@ fun FeSpaceTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            // Dark status bar for elegant homey theme
+            window.statusBarColor = DarkCharcoal.toArgb()
+            window.navigationBarColor = DarkCharcoal.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
         }
     }
 

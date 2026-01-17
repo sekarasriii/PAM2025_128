@@ -60,6 +60,7 @@ dependencies {
     //ikon dashboard, photolibrary, dll
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.runtime.livedata)
+    implementation(libs.coil.compose)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

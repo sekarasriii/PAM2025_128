@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
 class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
 
     fun isValidEmail(email: String): Boolean {
-        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        return com.example.fespace.utils.InputValidator.validateEmail(email).first
     }
 
     fun isLoginValid(email: String, pass: String): Boolean {
@@ -23,10 +23,35 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
     }
 
     fun isRegisterValid(name: String, email: String, pass: String, whatsapp: String): Boolean {
-        return name.isNotBlank() && email.contains("@") && pass.length >= 6 && whatsapp.isNotBlank()
+        return com.example.fespace.utils.InputValidator.validateRegistration(
+            name = name,
+            email = email,
+            whatsapp = whatsapp,
+            password = pass
+        ).first
+    }
+    
+    /**
+     * Get detailed validation error message for registration
+     */
+    fun getRegistrationError(name: String, email: String, pass: String, whatsapp: String): String {
+        return com.example.fespace.utils.InputValidator.validateRegistration(
+            name = name,
+            email = email,
+            whatsapp = whatsapp,
+            password = pass
+        ).second
     }
 
-    fun register(name: String, email: String, pass: String, role: String, whatsapp: String, onResult: () -> Unit) {
+    fun register(
+        name: String,
+        email: String,
+        pass: String,
+        role: String,
+        whatsapp: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val newUser = UserEntity(
@@ -36,12 +61,11 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
                     role = role,
                     whatsappNumber = whatsapp
                 )
-                userRepository.insertUser(newUser) // Changed from userRepository to repository
-                withContext(Dispatchers.Main) { onResult() }
+                userRepository.insertUser(newUser)
+                withContext(Dispatchers.Main) { onSuccess() }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    println("DEBUG_REGISTER: Gagal daftar - ${e.message}")
-                    onResult() // Panggil agar isLoading = false
+                    onError(e.message ?: "Terjadi kesalahan saat mendaftar")
                 }
             }
         }
@@ -57,7 +81,8 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
     class ViewModelFactory(
         private val userRepo: UserRepository,private val portfolioRepo: PortfolioRepository,
         private val serviceRepo: ServiceRepository,
-        private val orderRepo: OrderRepository
+        private val orderRepo: OrderRepository,
+        private val orderDocumentRepo: com.example.fespace.repository.OrderDocumentRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
@@ -70,7 +95,8 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
                         portfolioRepository = portfolioRepo,
                         serviceRepository = serviceRepo,
                         orderRepository = orderRepo,
-                        userRepository = userRepo
+                        userRepository = userRepo,
+                        orderDocumentRepository = orderDocumentRepo
                     ) as T
 
                 modelClass.isAssignableFrom(ClientViewModel::class.java) ->
@@ -78,7 +104,8 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
                         orderRepository = orderRepo,
                         userRepository = userRepo,      // Tambahkan ini jika dibutuhkan
                         serviceRepository = serviceRepo,
-                        portfolioRepository = portfolioRepo
+                        portfolioRepository = portfolioRepo,
+                        orderDocumentRepository = orderDocumentRepo
                     ) as T
 
                 else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

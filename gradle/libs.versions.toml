@@ -11,8 +11,10 @@ composeBom = "2024.09.00"
 room = "2.7.0-alpha11"
 ksp = "2.0.21-1.0.25"
 navigationCompose = "2.9.0"
+coil = "2.5.0"
 
 [libraries]
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

@@ -2,47 +2,111 @@ package com.example.fespace.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Primary Brand Colors - Modern Blue Gradient
-val PrimaryBlue = Color(0xFF2563EB) // Vibrant Blue
-val PrimaryBlueDark = Color(0xFF1E40AF) // Deep Blue
-val PrimaryBlueLight = Color(0xFF60A5FA) // Light Blue
+// ========================================
+// ELEGANT HOMEY COLOR PALETTE
+// Fusion: Luxury Dark Mode + Organic Earthy
+// ========================================
 
-// Secondary Colors - Elegant Purple
-val SecondaryPurple = Color(0xFF7C3AED) // Vibrant Purple
-val SecondaryPurpleLight = Color(0xFFA78BFA) // Light Purple
+// Dark Backgrounds - Sophisticated Foundation
+val DarkCharcoal = Color(0xFF1A1A1A)        // Main background
+val DarkGray = Color(0xFF2C2C2C)            // Card background
+val DarkGrayLight = Color(0xFF3A3A3A)       // Elevated cards
+val DarkGrayDark = Color(0xFF0F0F0F)        // Deep shadows
 
-// Accent Colors
-val AccentOrange = Color(0xFFF97316) // Vibrant Orange
-val AccentGreen = Color(0xFF10B981) // Success Green
-val AccentRed = Color(0xFFEF4444) // Error Red
-val AccentYellow = Color(0xFFF59E0B) // Warning Yellow
+// Warm Primary - Terracotta
+val Terracotta = Color(0xFFB35A42)          // Primary CTA, highlights
+val TerracottaLight = Color(0xFFC17A5C)     // Hover states, lighter accents
+val TerracottaDark = Color(0xFF9A4A32)      // Pressed states
+val TerracottaAlpha = Color(0x33B35A42)     // Subtle backgrounds
 
-// Neutral Colors - Light Theme
-val NeutralGray50 = Color(0xFFF9FAFB)
-val NeutralGray100 = Color(0xFFF3F4F6)
-val NeutralGray200 = Color(0xFFE5E7EB)
-val NeutralGray300 = Color(0xFFD1D5DB)
-val NeutralGray400 = Color(0xFF9CA3AF)
-val NeutralGray500 = Color(0xFF6B7280)
-val NeutralGray600 = Color(0xFF4B5563)
-val NeutralGray700 = Color(0xFF374151)
-val NeutralGray800 = Color(0xFF1F2937)
-val NeutralGray900 = Color(0xFF111827)
+// Organic Secondary - Sage Green
+val SageGreen = Color(0xFF8F9777)           // Secondary accent, success
+val SageGreenLight = Color(0xFFA8B88F)      // Subtle highlights
+val SageGreenDark = Color(0xFF6F7757)       // Darker variant
+val SageGreenAlpha = Color(0x338F9777)      // Subtle backgrounds
 
-// Dark Theme Colors
-val DarkBackground = Color(0xFF0F172A) // Deep Navy
-val DarkSurface = Color(0xFF1E293B) // Slate
-val DarkSurfaceVariant = Color(0xFF334155) // Light Slate
+// Metallics - Premium Accents
+val Gold = Color(0xFFD4AF37)                // Premium highlights
+val GoldLight = Color(0xFFE4BF47)           // Lighter gold
+val Copper = Color(0xFFB87333)              // Decorative elements
+val CopperLight = Color(0xFFC88343)         // Lighter copper
 
-// Status Colors
-val StatusPending = Color(0xFFFBBF24) // Yellow
-val StatusInProgress = Color(0xFF3B82F6) // Blue
-val StatusCompleted = Color(0xFF10B981) // Green
-val StatusCancelled = Color(0xFFEF4444) // Red
+// Neutrals - Text & Surfaces
+val Cream = Color(0xFFF5F5DC)               // Primary text on dark
+val Beige = Color(0xFFE6DCC3)               // Secondary text
+val WarmWhite = Color(0xFFFFFDF7)           // Highlights, pure white alternative
+val WarmGray = Color(0xFFB8B0A3)            // Tertiary text
 
-// Category Colors (for services/portfolios)
-val CategoryResidential = Color(0xFF8B5CF6) // Purple
-val CategoryCommercial = Color(0xFF0EA5E9) // Sky Blue
-val CategoryRenovation = Color(0xFFF59E0B) // Amber
-val CategoryInterior = Color(0xFFEC4899) // Pink
-val CategoryLandscape = Color(0xFF10B981) // Emerald
+// Legacy Colors (for compatibility)
+val White = Color(0xFFFFFFFF)
+val Black = Color(0xFF000000)
+
+// Grays - Supporting Colors
+val Gray100 = Color(0xFFF8F6F3)
+val Gray200 = Color(0xFFEAE6DF)
+val Gray300 = Color(0xFFD4CFC5)
+val Gray400 = Color(0xFFB8B0A3)
+val Gray500 = Color(0xFF9B8D7F)
+val Gray600 = Color(0xFF7A6E5F)
+val Gray700 = Color(0xFF5A5047)
+val Gray800 = Color(0xFF3A342D)
+val Gray900 = Color(0xFF1F1C18)
+
+// Text Colors - Dark Theme Optimized
+val TextPrimary = Cream                     // Main text
+val TextSecondary = Beige                   // Secondary text
+val TextTertiary = WarmGray                 // Tertiary text
+val TextDisabled = Gray600                  // Disabled text
+
+// Accent Colors - Semantic
+val AccentGold = Gold                       // Premium, featured
+val AccentGreen = SageGreen                 // Success, active, positive
+val AccentRed = Color(0xFFD45C50)          // Error, alert, danger
+val AccentOrange = Color(0xFFD4956C)       // Warning, pending
+val AccentBlue = Color(0xFF6B8CAE)         // Info, neutral action
+
+// Status Colors - Order States
+val StatusPending = AccentOrange            // Pending review
+val StatusInProgress = Terracotta           // In progress
+val StatusApproved = SageGreen              // Approved/Completed
+val StatusInDesign = Gold                   // In design phase
+val StatusCancelled = AccentRed             // Cancelled/Rejected
+val StatusDelivered = SageGreenLight        // Delivered
+
+// Category Colors - Service Types
+val CategoryResidential = Terracotta        // Residential projects
+val CategoryCommercial = Copper             // Commercial projects
+val CategoryRenovation = AccentOrange       // Renovation
+val CategoryInterior = SageGreen            // Interior design
+val CategoryLandscape = SageGreenDark       // Landscape
+val CategoryConsultation = Gold             // Consultation
+
+// Functional Colors
+val SuccessGreen = SageGreen
+val ErrorRed = AccentRed
+val WarningOrange = AccentOrange
+val InfoBlue = AccentBlue
+
+// Surface Variants
+val SurfaceDim = DarkGrayDark
+val Surface = DarkGray
+val SurfaceBright = DarkGrayLight
+val SurfaceContainer = Color(0xFF252525)
+val SurfaceContainerHigh = Color(0xFF303030)
+
+// Legacy color aliases for backward compatibility
+val BrownWarm = Terracotta                  // Alias to Terracotta
+val CreamPrimary = Cream                    // Alias to Cream
+val BrownDark = TerracottaDark              // Alias to TerracottaDark
+val BeigeLight = Beige                      // Alias to Beige
+
+// Additional surface colors
+val DarkSurface = DarkGray                  // Surface color for cards
+val CardBeige = Color(0xFFF5F1E8)           // Light beige for cards
+val Ivory = Color(0xFFFFFFF0)               // Ivory color for highlights
+
+// Status color aliases (for components that still use old names)
+val StatusCompleted = SageGreen             // Approved/Completed status
+val StatusReview = AccentOrange             // Review status
+val StatusSurvey = AccentBlue               // Survey status
+val StatusFinal = Gold                      // Final status
