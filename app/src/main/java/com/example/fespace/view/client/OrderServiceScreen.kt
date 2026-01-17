@@ -1,5 +1,6 @@
 package com.example.fespace.view.client
 
+import java.text.DecimalFormat
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.*
@@ -26,16 +28,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fespace.data.local.entity.PortfolioEntity
+import com.example.fespace.ui.components.LocalImage
+import com.example.fespace.ui.theme.*
 import com.example.fespace.viewmodel.ClientViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderServiceScreen(
-    // navController dihapus karena tidak digunakan
     clientViewModel: ClientViewModel,
     clientId: Int,
     serviceId: Int,
-    onOrderSuccess: () -> Unit
+    onOrderSuccess: () -> Unit,
+    onBackClick: () -> Unit
 ) {
     // Data dari ViewModel
     val services by clientViewModel.availableServices.collectAsStateWithLifecycle()
@@ -57,8 +61,24 @@ fun OrderServiceScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Pesan Jasa Desain", fontWeight = FontWeight.Bold) })
-        }
+            TopAppBar(
+                title = { Text("Pesan Jasa Desain", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Kembali"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = DarkCharcoal,
+                    titleContentColor = TextPrimary,
+                    navigationIconContentColor = Terracotta
+                )
+            )
+        },
+        containerColor = DarkCharcoal
     ) { padding ->
         Column(
             modifier = Modifier
@@ -74,19 +94,20 @@ fun OrderServiceScreen(
             Text(
                 "Inspirasi Desain Sebelumnya",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
 
             if (portfolios.isEmpty()) {
                 Text(
                     "Belum ada portfolio tersedia",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = TextTertiary
                 )
             } else {
                 LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(vertical = 4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.Medium),
+                    contentPadding = PaddingValues(vertical = Spacing.Small)
                 ) {
                     items(portfolios) { item ->
                         PortfolioItemCard(item)
@@ -94,7 +115,7 @@ fun OrderServiceScreen(
                 }
             }
 
-            HorizontalDivider(thickness = 1.dp, color = Color.LightGray.copy(alpha = 0.5f))
+            HorizontalDivider(thickness = 1.dp, color = Gray700)
 
             // ==========================================
             // SECTION 2: FORMULIR PEMESANAN
@@ -118,16 +139,26 @@ fun OrderServiceScreen(
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     modifier = Modifier
                         .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedBorderColor = Terracotta,
+                        unfocusedBorderColor = Gray700,
+                        cursorColor = Terracotta,
+                        focusedLabelColor = Terracotta,
+                        unfocusedLabelColor = TextSecondary
+                    )
                 )
 
                 ExposedDropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    onDismissRequest = { expanded = false },
+                    containerColor = DarkSurface
                 ) {
                     services.forEach { service ->
                         DropdownMenuItem(
-                            text = { Text(service.nameServices) },
+                            text = { Text(service.nameServices, color = TextPrimary) },
                             onClick = {
                                 selectedServiceId = service.idServices
                                 expanded = false
@@ -142,45 +173,95 @@ fun OrderServiceScreen(
                 onClick = { launcher.launch("image/*") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = Color.Black
+                    containerColor = SurfaceContainerHigh,
+                    contentColor = TextPrimary
                 ),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(Radius.Small)
             ) {
-                Icon(Icons.Default.CloudUpload, null)
-                Spacer(Modifier.width(8.dp))
+                Icon(Icons.Default.CloudUpload, null, tint = Terracotta)
+                Spacer(Modifier.width(Spacing.Small))
                 Text(if (locationPhotoUri == null) "Upload Foto Lokasi" else "Foto Terpilih ✅")
             }
 
             // 3. Input Alamat
+            var addressError by remember { mutableStateOf("") }
             OutlinedTextField(
                 value = address,
-                onValueChange = { address = it },
-                label = { Text("Alamat Lokasi Proyek") },
-                placeholder = { Text("Contoh: Jl. Merdeka No. 10, Jakarta") },
+                onValueChange = { 
+                    address = it
+                    addressError = when {
+                        it.isBlank() -> "Alamat tidak boleh kosong"
+                        it.all { char -> char.isDigit() || char.isWhitespace() || !char.isLetterOrDigit() } -> 
+                            "Alamat tidak boleh hanya berisi angka/simbol"
+                        !it.any { char -> char.isLetter() } -> "Alamat harus mengandung huruf"
+                        else -> ""
+                    }
+                },
+                label = { Text("Alamat Lokasi Proyek", color = TextSecondary) },
+                placeholder = { Text("Contoh: Jl. Merdeka No. 10, Jakarta", color = TextTertiary) },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 2
+                minLines = 2,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    focusedBorderColor = Terracotta,
+                    unfocusedBorderColor = Gray700,
+                    cursorColor = Terracotta,
+                    focusedLabelColor = Terracotta,
+                    unfocusedLabelColor = TextSecondary
+                ),
+                isError = addressError.isNotEmpty() && address.isNotEmpty(),
+                supportingText = {
+                    if (addressError.isNotEmpty() && address.isNotEmpty()) {
+                        Text(addressError, color = MaterialTheme.colorScheme.error)
+                    }
+                }
             )
 
             // 4. Input Budget
+            var displayBudget by remember { mutableStateOf("") }
             OutlinedTextField(
-                value = budget,
-                onValueChange = { if (it.all { c -> c.isDigit() }) budget = it },
-                label = { Text("Rencana Anggaran (Budget)") },
-                prefix = { Text("Rp ") },
-                placeholder = { Text("Contoh: 50000000") },
+                value = displayBudget,
+                onValueChange = { input ->
+                    val cleanInput = input.replace(".", "").replace(",", "")
+                    if (cleanInput.all { it.isDigit() }) {
+                        budget = cleanInput
+                        displayBudget = if (cleanInput.isEmpty()) "" else {
+                            val formatter = java.text.DecimalFormat("#,###")
+                            formatter.format(cleanInput.toLong()).replace(",", ".")
+                        }
+                    }
+                },
+                label = { Text("Rencana Anggaran (Budget)", color = TextSecondary) },
+                prefix = { Text("Rp ", color = Terracotta) },
+                placeholder = { Text("Contoh: 50.000.000", color = TextTertiary) },
                 modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    focusedBorderColor = Terracotta,
+                    unfocusedBorderColor = Gray700,
+                    cursorColor = Terracotta,
+                    focusedLabelColor = Terracotta,
+                    unfocusedLabelColor = TextSecondary
+                ),
                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                     keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
                 )
             )
+
+            val isFormValid = selectedServiceId != null && 
+                             address.isNotBlank() && 
+                             addressError.isEmpty() && 
+                             budget.isNotBlank() && 
+                             locationPhotoUri != null
 
             Spacer(modifier = Modifier.height(24.dp))
 
             // 5. Tombol Kirim (Simpan ke DB sesuai Flowchart)
             Button(
                 onClick = {
-                    if (selectedServiceId != null) {
+                    if (isFormValid) {
                         clientViewModel.placeOrder(
                             clientId = clientId,
                             serviceId = selectedServiceId!!,
@@ -190,13 +271,19 @@ fun OrderServiceScreen(
                         onOrderSuccess()
                     }
                 },
-                enabled = selectedServiceId != null && address.isNotBlank() && budget.isNotBlank(),
+                enabled = isFormValid,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Terracotta,
+                    contentColor = Cream,
+                    disabledContainerColor = Gray800,
+                    disabledContentColor = TextDisabled
+                )
             ) {
-                Text("Kirim Pesanan", fontWeight = FontWeight.Bold)
+                Text("Kirim Pesanan", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
             }
         }
     }
@@ -208,41 +295,38 @@ fun PortfolioItemCard(portfolio: PortfolioEntity) {
         modifier = Modifier
             .width(260.dp)
             .height(200.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+        shape = RoundedCornerShape(Radius.Medium),
+        elevation = CardDefaults.cardElevation(Elevation.Card),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface)
     ) {
         Column {
-            Box(
+            // Display portfolio image
+            LocalImage(
+                imagePath = portfolio.imagePath,
+                contentDescription = portfolio.title,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Image,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
+                    .height(115.dp),
+                showPlaceholder = true
+            )
 
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(Spacing.Medium)) {
                 Text(
                     text = portfolio.title,
                     style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,
                     fontWeight = FontWeight.Bold,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = TextPrimary
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Spacing.ExtraSmall))
                 Text(
                     text = portfolio.description ?: "Tidak ada deskripsi proyek.",
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2,
                     lineHeight = 16.sp,
                     overflow = TextOverflow.Ellipsis,
-                    color = Color.Gray
+                    color = TextSecondary
                 )
             }
         }
