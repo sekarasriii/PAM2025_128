@@ -6,12 +6,14 @@ import com.example.fespace.repository.OrderRepository
 import com.example.fespace.repository.PortfolioRepository
 import com.example.fespace.repository.ServiceRepository
 import com.example.fespace.repository.UserRepository
+import com.example.fespace.repository.OrderDocumentRepository
 
 class ViewModelFactory(
     private val userRepo: UserRepository,
     private val portfolioRepo: PortfolioRepository,
     private val serviceRepo: ServiceRepository,
-    private val orderRepo: OrderRepository
+    private val orderRepo: OrderRepository,
+    private val orderDocumentRepo: OrderDocumentRepository
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -27,7 +29,8 @@ class ViewModelFactory(
                     portfolioRepository = portfolioRepo,
                     serviceRepository = serviceRepo,
                     orderRepository = orderRepo,
-                    userRepository = userRepo
+                    userRepository = userRepo,
+                    orderDocumentRepository = orderDocumentRepo
                 ) as T
             }
             // 3. PERBAIKAN: Sesuaikan dengan parameter ClientViewModel
@@ -36,7 +39,8 @@ class ViewModelFactory(
                     orderRepository = orderRepo,
                     userRepository = userRepo,      // Tambahkan ini agar tidak type mismatch
                     serviceRepository = serviceRepo,
-                    portfolioRepository = portfolioRepo
+                    portfolioRepository = portfolioRepo,
+                    orderDocumentRepository = orderDocumentRepo
                 ) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
