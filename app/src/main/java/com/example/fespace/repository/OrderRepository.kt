@@ -33,4 +33,8 @@ class OrderRepository(
     suspend fun getOrderById(id: Int): OrderEntity? {
         return orderDao.getOrderById(id)
     }
+
+    fun getOrderByIdFlow(id: Int): Flow<OrderEntity?> {
+        return orderDao.getOrderByIdFlow(id)
+    }
 } // Pastikan kurung kurawal penutup kelas hanya ada satu di paling bawah

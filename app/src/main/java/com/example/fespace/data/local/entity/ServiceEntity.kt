@@ -13,6 +13,8 @@ data class ServiceEntity(
     val priceStart: Double,
     val durationEstimate: String,
     val features: String?,
+    val imagePath: String? = null, // Legacy: single image path (kept for backward compatibility)
+    val imagePaths: String? = null, // New: multiple image paths (comma-separated)
     val createAt: Long = System.currentTimeMillis(),
     val updateAt: Long = System.currentTimeMillis() // Sesuaikan dengan 'updateAt' Anda
 )

@@ -21,6 +21,8 @@ data class OrderEntity(
     val locationAddress: String,
     val budget: Double,
     val status: String = "pending",
+    val designPath: String? = null, // Path to uploaded design file
+    val clientDocumentPath: String? = null, // Path to client uploaded document
     // Gunakan ColumnInfo agar konsisten dengan query DAO
     @androidx.room.ColumnInfo(name = "createAt")
     val createAt: Long = System.currentTimeMillis(),

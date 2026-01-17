@@ -49,6 +49,9 @@ interface OrderDao {
     @Query("SELECT * FROM orders WHERE idOrders = :id")
     suspend fun getOrderById(id: Int): OrderEntity?
 
+    @Query("SELECT * FROM orders WHERE idOrders = :id")
+    fun getOrderByIdFlow(id: Int): Flow<OrderEntity?>
+
     @Query("SELECT * FROM orders WHERE status = :status")
     fun getOrdersByStatus(status: String): Flow<List<OrderEntity>>
 
@@ -59,5 +62,6 @@ interface OrderDao {
     ORDER BY orders.createAt DESC
 """)
     fun getFilteredOrders(status: String?, clientName: String?): Flow<List<OrderEntity>>
+
 
 }

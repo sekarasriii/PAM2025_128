@@ -22,6 +22,14 @@ class UserRepository(private val userDao: UserDao) {
         return userDao.getUserById(userId)
     }
 
+    fun getUserByIdFlow(userId: Int): Flow<UserEntity?> {
+        return userDao.getUserByIdFlow(userId)
+    }
+
+    fun getUserByEmailFlow(email: String): Flow<UserEntity?> {
+        return userDao.getUserByEmailFlow(email)
+    }
+
     suspend fun update(user: UserEntity) {
         userDao.updateUser(user) // Pastikan nama di Dao sesuai
     }
@@ -31,4 +39,6 @@ class UserRepository(private val userDao: UserDao) {
     }
 
     fun getClientCount(): Flow<Int> = userDao.getClientCount()
+
+    fun getAllClients(): Flow<List<UserEntity>> = userDao.getAllClients()
 }

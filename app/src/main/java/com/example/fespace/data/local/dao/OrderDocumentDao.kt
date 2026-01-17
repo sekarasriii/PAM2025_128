@@ -28,8 +28,15 @@ interface OrderDocumentDao {
     // ========================
     @Query("""
         SELECT * FROM order_documents 
-        WHERE idDocuments = :orderId
+        WHERE id_orders = :orderId
         ORDER BY uploaded_at DESC
     """)
     fun getDocumentsByOrder(orderId: Int): Flow<List<OrderDocumentEntity>>
+    
+    @Query("""
+        SELECT * FROM order_documents 
+        WHERE id_orders = :orderId AND docType = :docType
+        ORDER BY uploaded_at DESC
+    """)
+    fun getDocumentsByOrderAndType(orderId: Int, docType: String): Flow<List<OrderDocumentEntity>>
 }

@@ -20,12 +20,21 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE idUser = :userId")
     suspend fun getUserById(userId: Int): UserEntity?
 
+    @Query("SELECT * FROM users WHERE idUser = :userId")
+    fun getUserByIdFlow(userId: Int): kotlinx.coroutines.flow.Flow<UserEntity?>
+
+    @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
+    fun getUserByEmailFlow(email: String): kotlinx.coroutines.flow.Flow<UserEntity?>
+
     @Update
     suspend fun updateUser(user: UserEntity)
 
     @Delete
     suspend fun delete(user: UserEntity)
 
-    @Query("SELECT COUNT(*) FROM users")
+    @Query("SELECT COUNT(*) FROM users WHERE role = 'client'")
     fun getClientCount(): kotlinx.coroutines.flow.Flow<Int>
+
+    @Query("SELECT * FROM users WHERE role = 'client' ORDER BY createAt DESC")
+    fun getAllClients(): kotlinx.coroutines.flow.Flow<List<UserEntity>>
 }
