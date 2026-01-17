@@ -3,6 +3,7 @@ package com.example.fespace.view.client
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.fespace.ui.theme.*
 import com.example.fespace.viewmodel.ClientViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,20 +31,23 @@ fun ClientProfileScreen(
 ) {
     val context = LocalContext.current
 
-    // 1. Memuat profil user saat layar dibuka
+    // Load user profile
     LaunchedEffect(clientId) {
         clientViewModel.loadUserProfile(clientId)
     }
 
     val user = clientViewModel.currentUser
 
-    // 2. State lokal untuk form edit
+    // Local state for form
     var name by remember { mutableStateOf("") }
     var whatsapp by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var isEditing by remember { mutableStateOf(false) } // Tambahkan variabel ini
+    var isEditing by remember { mutableStateOf(false) }
 
-    // 3. Sinkronisasi data dari database ke UI
+    // Local state for logout confirmation
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    // Sync data from database to UI
     LaunchedEffect(user) {
         user?.let {
             name = it.nameUser
@@ -51,10 +56,39 @@ fun ClientProfileScreen(
         }
     }
 
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Konfirmasi Logout") },
+            text = { Text("Apakah Anda yakin ingin keluar dari aplikasi?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentRed)
+                ) {
+                    Text("Logout", color = Cream)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Batal", color = Terracotta)
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profil & Pengaturan") },
+                title = { 
+                    Text(
+                        "Profil & Pengaturan",
+                        fontWeight = FontWeight.Bold
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
@@ -63,7 +97,7 @@ fun ClientProfileScreen(
                 actions = {
                     TextButton(onClick = {
                         if (isEditing) {
-                            // Update data ke database saat klik simpan
+                            // Update to database
                             user?.let {
                                 val updatedUser = it.copy(
                                     nameUser = name,
@@ -76,24 +110,35 @@ fun ClientProfileScreen(
                         }
                         isEditing = !isEditing
                     }) {
-                        Text(if (isEditing) "Simpan" else "Edit", fontWeight = FontWeight.Bold)
+                        Text(
+                            if (isEditing) "Simpan" else "Edit",
+                            fontWeight = FontWeight.Bold,
+                            color = Terracotta
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = DarkCharcoal,
+                    titleContentColor = TextPrimary,
+                    navigationIconContentColor = Terracotta
+                )
             )
-        }
+        },
+        containerColor = DarkCharcoal
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState()) // Tambahkan scroll agar tidak terpotong
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .verticalScroll(rememberScrollState())
+                .padding(Spacing.Large),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
         ) {
-            // Foto Profil Placeholder
+            // Profile Photo Placeholder
             Surface(
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = CircleShape,
+                color = DarkSurface,
                 modifier = Modifier.size(100.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -101,60 +146,149 @@ fun ClientProfileScreen(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
                         modifier = Modifier.size(60.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = Terracotta
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(Spacing.Small))
 
-            // Field Nama Lengkap
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Nama Lengkap") },
+            // Profile Info Card
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                enabled = isEditing,
-                leadingIcon = { Icon(Icons.Default.Badge, null) }
-            )
+                shape = RoundedCornerShape(Radius.Medium),
+                colors = CardDefaults.cardColors(
+                    containerColor = DarkSurface
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = Elevation.Card
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(Spacing.Medium),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.Medium)
+                ) {
+                    Text(
+                        "Informasi Profil",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimary
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    // Name Field
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Nama Lengkap") },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = isEditing,
+                        leadingIcon = { 
+                            Icon(
+                                Icons.Default.Badge,
+                                null,
+                                tint = if (isEditing) Terracotta else TextTertiary
+                            ) 
+                        },
+                        shape = RoundedCornerShape(Radius.Medium),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedBorderColor = Terracotta,
+                            unfocusedBorderColor = Gray700,
+                            cursorColor = Terracotta,
+                            focusedLabelColor = Terracotta,
+                            unfocusedLabelColor = TextSecondary
+                        )
+                    )
 
-            // Field WhatsApp
-            OutlinedTextField(
-                value = whatsapp,
-                onValueChange = { if (it.all { char -> char.isDigit() }) whatsapp = it },
-                label = { Text("Nomor WhatsApp") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = isEditing,
-                leadingIcon = { Icon(Icons.Default.Phone, null) }
-            )
+                    // WhatsApp Field
+                    OutlinedTextField(
+                        value = whatsapp,
+                        onValueChange = { newValue ->
+                            // Only allow digits and + symbol
+                            val cleaned = newValue.filter { it.isDigit() || it == '+' }
+                            // Ensure it starts with +62 if user is typing
+                            if (isEditing) {
+                                whatsapp = when {
+                                    cleaned.isEmpty() -> "+62"
+                                    cleaned.startsWith("+62") -> cleaned
+                                    cleaned.startsWith("62") -> "+$cleaned"
+                                    cleaned.startsWith("0") -> "+62${cleaned.substring(1)}"
+                                    cleaned.startsWith("8") -> "+62$cleaned"
+                                    else -> "+62$cleaned"
+                                }
+                            }
+                        },
+                        label = { Text("Nomor WhatsApp") },
+                        placeholder = { Text("+62 8XXX-XXXX-XXXX", color = TextTertiary.copy(alpha = 0.5f)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = isEditing,
+                        leadingIcon = { 
+                            Icon(
+                                Icons.Default.Phone,
+                                null,
+                                tint = if (isEditing) Terracotta else TextTertiary
+                            ) 
+                        },
+                        visualTransformation = com.example.fespace.utils.WhatsAppVisualTransformation(),
+                        shape = RoundedCornerShape(Radius.Medium),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedBorderColor = Terracotta,
+                            unfocusedBorderColor = Gray700,
+                            cursorColor = Terracotta,
+                            focusedLabelColor = Terracotta,
+                            unfocusedLabelColor = TextSecondary
+                        )
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    // Email Field (Read Only)
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = {},
+                        label = { Text("Email Akun") },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = false,
+                        leadingIcon = { 
+                            Icon(
+                                Icons.Default.Email,
+                                null,
+                                tint = TextTertiary
+                            ) 
+                        },
+                        shape = RoundedCornerShape(Radius.Medium),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = TextSecondary,
+                            disabledBorderColor = Gray700,
+                            disabledLabelColor = TextDisabled,
+                            disabledLeadingIconColor = TextDisabled
+                        )
+                    )
+                }
+            }
 
-            // Field Email (Read Only)
-            OutlinedTextField(
-                value = email,
-                onValueChange = {},
-                label = { Text("Email Akun") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = false,
-                leadingIcon = { Icon(Icons.Default.Email, null) }
-            )
+            Spacer(modifier = Modifier.weight(1f))
 
-            Spacer(modifier = Modifier.weight(1f)) // Menggunakan weight dengan benar
-
+            // Logout Button
             Button(
-                onClick = onLogout,
+                onClick = { showLogoutDialog = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                shape = RoundedCornerShape(12.dp)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AccentRed,
+                    contentColor = Cream
+                ),
+                shape = RoundedCornerShape(Radius.Medium)
             ) {
                 Icon(Icons.AutoMirrored.Filled.Logout, null)
-                Spacer(Modifier.width(8.dp))
-                Text("Logout")
+                Spacer(Modifier.width(Spacing.Small))
+                Text(
+                    "Logout",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
